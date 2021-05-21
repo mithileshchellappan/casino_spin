@@ -40,6 +40,7 @@ dependencies:
   cloud_firestore:
   rounded_loading_button:
   tab_indicator_styler:
+  slide_countdown_clock: ^1.0.3
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +62,7 @@ flutter:
     - spinner.png
     - spinner2.png
     - roulette-center-300.png
+    
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

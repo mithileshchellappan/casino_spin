@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinning_wheel/flutter_spinning_wheel.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:slide_countdown_clock/slide_countdown_clock.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -71,34 +72,57 @@ class _MyHomePageState extends State<MyHomePage> {
                               bottomLeft: Radius.circular(15),
                               bottomRight: Radius.circular(15)),
                           color: Color(0xFF8360c3)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text('Next Show: 12:00 PM',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20)),
+                          SizedBox(
+                            height: 10,
                           ),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Container(
-                                decoration: BoxDecoration(
-                                    color: Colors.yellowAccent.withOpacity(0.4),
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(10)),
-                                    border: Border.all(color: Colors.yellow)),
-                                child: Padding(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Text('Coins:260',
+                                  child: Text('Next Show: 12:00 PM',
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
                                           fontSize: 20)),
-                                )),
-                          )
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Container(
+                                      decoration: BoxDecoration(
+                                          color: Colors.yellowAccent
+                                              .withOpacity(0.4),
+                                          borderRadius: BorderRadius.all(
+                                              Radius.circular(10)),
+                                          border:
+                                              Border.all(color: Colors.yellow)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text('Coins:260',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20)),
+                                      )),
+                                )
+                              ],
+                            ),
+                          ),
+                          SlideCountdownClock(
+                            onDone: (){
+                              print('done');
+                            },
+                              slideDirection: SlideDirection.Up,
+                              separator: '-',
+                              padding: EdgeInsets.all(13),
+                              decoration: BoxDecoration(
+                                  color: Colors.green[200],
+                                  shape: BoxShape.circle),
+                              duration: Duration(minutes: 1))
                         ],
                       )),
                   SizedBox(height: 60),
@@ -117,7 +141,6 @@ class _MyHomePageState extends State<MyHomePage> {
                               Image.asset('roulette-center-300.png'),
                           onUpdate: (val) {
                             _dividerController.add(val);
-                            print(val);
                           },
                           onEnd: _dividerController.add,
                           shouldStartOrStop: _wheelNotifier.stream,
@@ -130,10 +153,13 @@ class _MyHomePageState extends State<MyHomePage> {
                             builder: (context, snapshot) {
                               var dt = DateTime.now().minute;
 
-                              if (!(dt % 15 == 0))
+                              if (!(dt % 15 == 0)) {
                                 return snapshot.hasData
                                     ? RouletteScore(snapshot.data)
                                     : Container();
+                              } else {
+                                return Container();
+                              }
                             }),
                         SizedBox(
                           height: 30,
@@ -221,7 +247,7 @@ class RouletteScore extends StatelessWidget {
   Widget build(BuildContext context) {
     return isDisabled
         ? Text('')
-        : Text('Your selected amount is ${labels[selected]}',
+        : Text('Your selected number is ${labels[selected]}',
             style: TextStyle(fontStyle: FontStyle.italic, fontSize: 24.0));
   }
 }
