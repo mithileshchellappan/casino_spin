@@ -12,14 +12,16 @@ class MyHomePage extends StatefulWidget {
 
 bool isDisabled = false;
 final Map<int, String> labels = {
-  1: '1000\$',
-  2: '400\$',
-  3: '800\$',
-  4: '7000\$',
-  5: '5000\$',
-  6: '300\$',
-  7: '2000\$',
-  8: '100\$',
+  1: '1',
+  2: '2',
+  3: '3',
+  4: '4',
+  5: '5',
+  6: '6',
+  7: '7',
+  8: '8',
+  9: '9',
+  10: '10'
 };
 String selectedNumb = '0';
 
@@ -40,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return DateTime.now();
   }
 
+  String selectedNumber;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,85 +64,129 @@ class _MyHomePageState extends State<MyHomePage> {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(height:200,
-                  decoration: BoxDecoration(borderRadius:BorderRadius.only(bottomLeft:Radius.circular(15),bottomRight:Radius.circular(15)),color:Color(0xFF8360c3)),
-                  child:Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text('Next Show: 12:00 PM',style:TextStyle(color:Colors.white,fontWeight:FontWeight.bold,fontSize:20)),
-                      ),Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          decoration: BoxDecoration(color:Colors.yellowAccent.withOpacity(0.4),borderRadius:BorderRadius.all(Radius.circular(10)),border:Border.all(color:Colors.yellow)),
-                          child:Padding(
+                  Container(
+                      height: 200,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(15),
+                              bottomRight: Radius.circular(15)),
+                          color: Color(0xFF8360c3)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text('Coins:260',style:TextStyle(color:Colors.white,fontWeight:FontWeight.bold,fontSize:20)),
+                            child: Text('Next Show: 12:00 PM',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20)),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.yellowAccent.withOpacity(0.4),
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(10)),
+                                    border: Border.all(color: Colors.yellow)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text('Coins:260',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20)),
+                                )),
                           )
+                        ],
+                      )),
+                  SizedBox(height: 60),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        SpinningWheel(
+                          Image.asset('spinner2.png'),
+                          width: 310,
+                          height: 310,
+                          initialSpinAngle: _generateRandomAngle(),
+                          spinResistance: 0.6,
+                          canInteractWhileSpinning: false,
+                          dividers: 10,
+                          secondaryImage:
+                              Image.asset('roulette-center-300.png'),
+                          onUpdate: (val) {
+                            _dividerController.add(val);
+                            print(val);
+                          },
+                          onEnd: _dividerController.add,
+                          shouldStartOrStop: _wheelNotifier.stream,
+                          secondaryImageHeight: 110,
+                          secondaryImageWidth: 110,
                         ),
-                      )
-                    ],
+                        SizedBox(height: 30),
+                        StreamBuilder(
+                            stream: _dividerController.stream,
+                            builder: (context, snapshot) {
+                              var dt = DateTime.now().minute;
+
+                              if (!(dt % 15 == 0))
+                                return snapshot.hasData
+                                    ? RouletteScore(snapshot.data)
+                                    : Container();
+                            }),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        Builder(builder: (context) {
+                          var dt = DateTime.now().minute;
+                          if (!(dt % 15 == 0)) {
+                            return StreamBuilder(
+                                stream: _dividerController.stream,
+                                builder: (context, snapshot) {
+                                  return ElevatedButton(
+                                      child: new Text("Submit?"),
+                                      onPressed: isDisabled
+                                          ? null
+                                          : () async {
+                                              print('val' +
+                                                  snapshot.data.toString());
+                                              Alert(
+                                                  context: context,
+                                                  title:
+                                                      'Confirm ${labels[snapshot.data]}',
+                                                  buttons: [
+                                                    DialogButton(
+                                                        child: Text('Yes'),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            selectedNumber =
+                                                                labels[snapshot
+                                                                    .data];
+                                                          });
+                                                          Navigator.pop(
+                                                              context);
+                                                          Alert(
+                                                              context: context,
+                                                              title:
+                                                                  'Enter coins to bet',
+                                                              content:
+                                                                  TextFormField(
+                                                                keyboardType:
+                                                                    TextInputType
+                                                                        .number,
+                                                              )).show();
+                                                        })
+                                                  ]).show();
+                                              print('val crossed');
+                                            });
+                                });
+                          }
+                          return Container();
+                        })
+                      ],
+                    ),
                   )
-                  ),
-                  SizedBox(height:60),
-                  Expanded(child: Column(children: [
-                    SpinningWheel(
-                    Image.asset('spinner.png'),
-                    width: 310,
-                    height: 310,
-                    initialSpinAngle: _generateRandomAngle(),
-                    spinResistance: 0.6,
-                    canInteractWhileSpinning: false,
-                    dividers: 8,
-                    secondaryImage: Image.asset('roulette-center-300.png'),
-                    onUpdate: (val) {
-                      _dividerController.add(val);
-                      print(val);
-                    },
-                    onEnd: _dividerController.add,
-                    shouldStartOrStop: _wheelNotifier.stream,
-                    secondaryImageHeight: 110,
-                    secondaryImageWidth: 110,
-                  ),
-                  SizedBox(height: 30),
-                  StreamBuilder(
-                    stream: _dividerController.stream,
-                    builder: (context, snapshot) => snapshot.hasData
-                        ? RouletteScore(snapshot.data)
-                        : Container(),
-                  ),
-                  SizedBox(
-                    height: 30,
-                  ),
-                  Builder(builder: (context) {
-                    var dt = DateTime.now().minute;
-                    if (!(dt % 15 == 0)) {
-                      return StreamBuilder(
-                          stream: _dividerController.stream,
-                          builder: (context, snapshot) {
-                            return ElevatedButton(
-                                child: new Text("Submit?"),
-                                onPressed: isDisabled
-                                    ? null
-                                    : () async {
-                                        print('val' + snapshot.data.toString());
-                                        Alert(
-                                            context: context,
-                                            title:
-                                                'Confirm ${labels[snapshot.data]}',
-                                            buttons: [
-                                              DialogButton(
-                                                  child: Text('Yes'),
-                                                  onPressed: () {})
-                                            ]).show();
-                                        print('val crossed');
-                                      });
-                          });
-                    }
-                    return Container();
-                  })
-                  ],),)
                 ],
               );
             }),
@@ -156,14 +203,16 @@ class RouletteScore extends StatelessWidget {
   final int selected;
 
   final Map<int, String> labels = {
-    1: '1000\$',
-    2: '400\$',
-    3: '800\$',
-    4: '7000\$',
-    5: '5000\$',
-    6: '300\$',
-    7: '2000\$',
-    8: '100\$',
+    1: '8',
+    2: '9',
+    3: '10',
+    4: '1',
+    5: '2',
+    6: '3',
+    7: '4',
+    8: '5',
+    9: '6',
+    10: '7'
   };
 
   RouletteScore(this.selected);
