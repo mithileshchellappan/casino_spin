@@ -1,139 +1,454 @@
+import 'dart:async';
+import "package:http/http.dart" as http;
 import 'package:casino_spin/spin_wheel.dart';
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import "package:flutter/material.dart";
 import 'package:flutter/services.dart';
+import 'package:rounded_loading_button/rounded_loading_button.dart';
+import 'package:tab_indicator_styler/tab_indicator_styler.dart';
+// import 'package:trashgram/utils/bottom_bar.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final GlobalKey<FormState> _formkey = GlobalKey<FormState>();
-  String _email, _password;
-  bool authorized = false;
-  bool isAuthenticating = false;
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  TabController _tabController;
+  List<String> tabs = ["Register", "Sign In"];
+  final regForm = GlobalKey<FormState>(), signInForm = GlobalKey<FormState>();
+  int tabIndex;
+  String username, email, password, signInUsername, signInpassword;
+  final RoundedLoadingButtonController _registerBtnController =
+          new RoundedLoadingButtonController(),
+      _signInBtnController = RoundedLoadingButtonController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _tabController = TabController(
+      vsync: this,
+      length: tabs.length,
+      initialIndex: 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      child: Scaffold(
+          body: Column(
             children: [
-              Form(
-                  key: _formkey,
-                  child: Column(
-                    children: <Widget>[
-                      emailbutton(),
-                      Container(padding: EdgeInsets.only(bottom: 20.0)),
-                      passwordbutton(),
-                      Container(
-                        padding: EdgeInsets.all(10.0),
+              Container(
+                height: MediaQuery.of(context).size.height * .35,
+                width: double.infinity,
+                child: Image.network(
+                    "https://cdn.dribbble.com/users/788099/screenshots/4602132/gambling_kit8-net.png?compress=1&resize=800x600",
+                    fit: BoxFit.fitWidth),
+              ),
+              Expanded(
+                child: ClipRRect(
+                  // borderRadius: BorderRadius.only(
+                  //     topLeft: Radius.circular(30),
+                  //     topRight: Radius.circular(30)),
+                  child: Stack(
+                    children: [
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: buildTabBarView(),
                       ),
-                      finalsignin(context),
+                      Align(
+                          alignment: Alignment.topCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(child: _buildTabBar(context)),
+                          )),
                     ],
-                  )),
+                  ),
+                ),
+              ),
             ],
+          )),
+    );
+  }
+
+  TabBarView buildTabBarView() {
+    return TabBarView(
+      controller: _tabController,
+      children: [
+        Container(
+            // color: Color(0xFFF191720),
+            color: Colors.white,
+            child: SingleChildScrollView(
+              child: Column(children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 68.0),
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 12.0, right: 12),
+                      child: Text("Register to join the Casino.",
+                          style: TextStyle(
+                              // color: Colors.white,
+                              fontSize: 30,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+                Form(
+                  key: regForm,
+                  child: Column(
+                    children: List.generate(
+                        3,
+                        (index) => Padding(
+                              padding: const EdgeInsets.all(14.0),
+                              child: buildTextFormField(
+                                  index == 0
+                                      ? "Username"
+                                      : (index == 1
+                                          ? "Email address"
+                                          : "Password"),
+                                  "Register"),
+                            )),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * .75,
+                    child: RoundedLoadingButton(
+                      controller: _registerBtnController,
+                      color: Color(0xFFF191720),
+                      valueColor: Colors.white,
+                      onPressed: () async {
+                        final form = regForm.currentState;
+
+                        if (form.validate()) {
+                          print("in here");
+                          try {
+                            var request = http.MultipartRequest(
+                                'POST',
+                                Uri.parse(
+                                    'https://casino.pro-z.in/user/signup'));
+                            request.fields.addAll({
+                              'username': username,
+                              'password': password,
+                              'email': email.trim()
+                            });
+
+                            http.StreamedResponse response =
+                                await request.send();
+
+                            if (response.statusCode == 200 ||
+                                response.statusCode == 302) {
+                              print(await response.stream.bytesToString());
+                            } else {
+                              print(response.reasonPhrase);
+                            }
+                            // final UserCredential user = await FirebaseAuth
+                            //     .instance
+                            //     .createUserWithEmailAndPassword(
+                            //         email: email.trim(), password: password);
+                            // await FirebaseFirestore.instance
+                            //     .collection("users")
+                            //     .doc(user.user.uid.toString())
+                            //     .set({
+                            //   "email": email,
+                            //   "username": username,
+                            // });
+                            print("done");
+                            _registerBtnController.success();
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => MyHomePage()));
+                            // Timer(Duration(seconds: 2), () {
+                            //   _registerBtnController.reset();
+                            // });
+                          } catch (e) {
+                            print(e);
+                            _registerBtnController.error();
+                            Timer(Duration(seconds: 2), () {
+                              _registerBtnController.reset();
+                            });
+                            return showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    content: Center(
+                                      child: Column(
+                                        children: [
+                                          Image.network(
+                                              "https://cdn.dribbble.com/users/788099/screenshots/4602132/gambling_kit8-net.png?compress=1&resize=800x600"),
+                                          Text(
+                                            "Something went wrong. Please try again",
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                });
+                          }
+                        }
+                        // _registerBtnController.reset();
+                      },
+                      child: Material(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Ink(
+                          height: 49,
+                          // width: double.infinity,
+                          width: MediaQuery.of(context).size.width * .75,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF191720),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Text("Register",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              ]),
+            )),
+        Container(
+          color: Colors.white,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 50.0),
+                  child: Container(
+                    height: 140,
+                    width: double.infinity,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 19.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Let's Sign you In.",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.bold)),
+                          Text("Welcome back.",
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 28)),
+                          Text("You've been missed!",
+                              style:
+                                  TextStyle(color: Colors.black, fontSize: 28)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    Form(
+                      key: signInForm,
+                      child: Column(
+                        children: List.generate(
+                            2,
+                            (index) => Padding(
+                                  padding: const EdgeInsets.all(14.0),
+                                  child: buildTextFormField(
+                                      index == 0 ? "Username" : "Password",
+                                      "Sign In"),
+                                )),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width * .75,
+                        child: RoundedLoadingButton(
+                          controller: _signInBtnController,
+                          color: Color(0xFFF191720),
+                          valueColor: Colors.white,
+                          onPressed: () async {
+                            print(signInUsername + signInpassword);
+                            try {
+                              var request = http.MultipartRequest(
+                                  'POST',
+                                  Uri.parse(
+                                      'https://casino.pro-z.in/user/login'));
+                              request.fields.addAll({
+                                'username': signInUsername,
+                                'password': signInpassword,
+                                'access_given':
+                                    '8EoQT3SEjyDTqII58Yv3uVHcAVbb2v1c'
+                              });
+
+                              http.StreamedResponse response =
+                                  await request.send();
+
+                              if (response.statusCode == 200 ||
+                                  response.statusCode == 302) {
+                                print(await response.stream.bytesToString());
+                              } else {
+                                print(response.reasonPhrase);
+                              }
+
+                              _signInBtnController.success();
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => MyHomePage()));
+                            } catch (e) {
+                              _signInBtnController.reset();
+                              return alertDialog(
+                                  "Your credentials doesn't match our records.Please try Signing up.");
+                            }
+                          },
+                          child: Material(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Ink(
+                              height: 49,
+                              width: MediaQuery.of(context).size.width * .75,
+                              decoration: BoxDecoration(
+                                color: Color(0xFFF191720),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Center(
+                                child: Text("Sign In",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                )
+              ],
+            ),
           ),
+        )
+      ],
+    );
+  }
+
+  Widget buildTextFormField(String label, String mode) {
+    return Container(
+        width: MediaQuery.of(context).size.width * .75,
+        height: 54,
+        decoration: BoxDecoration(
+            border: Border.all(color: Color(0xFFF313039), width: 3),
+            borderRadius: BorderRadius.circular(20)),
+        child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextFormField(
+              validator: (val) {
+                print("vali");
+                if (mode == "Register") {
+                  if (label == "Email address" && !val.contains("@"))
+                    return "Enter a valid e-mail";
+                  if (label == "Password" && val.length < 5)
+                    return "Password must be atleast 5 characters long";
+                }
+                return null;
+              },
+              onChanged: (val) {
+                if (mode == "Register") {
+                  setState(() {
+                    if (label == "Username")
+                      username = val;
+                    else if (label == "Email address")
+                      email = val;
+                    else
+                      password = val;
+                  });
+                } else {
+                  setState(() {
+                    if (label == "Username")
+                      signInUsername = val;
+                    else
+                      signInpassword = val;
+                  });
+                }
+              },
+              style: TextStyle(color: Color(0xFFF191720)),
+              cursorColor: Colors.black,
+              obscureText: label == "Password",
+              decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: label,
+                  contentPadding: EdgeInsets.all(8),
+                  hintStyle: TextStyle(
+                      color: Color(0xFFF7c7d89), fontWeight: FontWeight.bold)),
+            )));
+  }
+
+  alertDialog(String message) {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Center(
+              child: Column(
+                children: [
+                  // Image.asset("assets/error.png"),
+                  Text(
+                    message,
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
+
+  Widget _buildTabBar(BuildContext context) {
+    return Container(
+      height: 50,
+      width: MediaQuery.of(context).size.width - 28,
+      decoration: BoxDecoration(
+        border: Border.all(width: 1, color: Colors.black),
+        color: Color(0xFFF39373f),
+        borderRadius: BorderRadius.all(Radius.circular(29)),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        physics: NeverScrollableScrollPhysics(),
+        labelColor: Color(0xFFF191720),
+        unselectedLabelColor: Colors.white,
+        isScrollable: false,
+        tabs: buildTabs(context),
+        indicator: RectangularIndicator(
+          // color: Colors.white,
+          color: Colors.white,
+
+          bottomLeftRadius: 110,
+          bottomRightRadius: 110,
+          topLeftRadius: 110,
+          topRightRadius: 110,
         ),
+        onTap: (index) {
+          setState(() {
+            tabIndex = index;
+          });
+        },
       ),
     );
   }
 
-  Widget emailbutton() {
-    return Container(
-        padding: EdgeInsets.all(10.0),
-        child: TextFormField(
-          keyboardType: TextInputType.number,
-          validator: (input) {
-            if (input.length < 5) {
-              return 'Invalid username';
-            }
-            return null;
-          },
-          onSaved: (input) {
-            setState(() {
-              _email = input;
-            });
-          },
-          decoration: InputDecoration(
-            enabledBorder: const OutlineInputBorder(
-              borderSide: const BorderSide(color: Colors.black, width: 1.0),
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            labelText: 'User ID',
-            labelStyle:
-                TextStyle(fontFamily: 'Montserrat', color: Colors.black),
-            prefixIcon: Icon(Icons.email, color: Colors.black),
-          ),
-        ));
-  }
-
-  Widget passwordbutton() {
-    return Container(
-        padding: EdgeInsets.all(10.0),
-        child: TextFormField(
-          obscureText: true,
-          validator: (input) {
-            if (input.length < 7) {
-              return 'Wrong password.';
-            }
-            return null;
-          },
-          onSaved: (input) {
-            setState(() {
-              _password = input;
-            });
-          },
-          decoration: InputDecoration(
-              enabledBorder: const OutlineInputBorder(
-                borderSide: const BorderSide(color: Colors.black, width: 1.0),
-              ),
-              border: OutlineInputBorder(
-                borderRadius: const BorderRadius.all(
-                  const Radius.circular(10.0),
-                ),
-              ),
-              labelText: 'Password',
-              labelStyle:
-                  TextStyle(fontFamily: 'Montserrat', color: Colors.black),
-              prefixIcon: Icon(Icons.lock, color: Colors.black)),
-        ));
-  }
-
-  Widget finalsignin(BuildContext context) {
-    return Container(
-        height: 53.00,
-        // width: 130.00,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          border: Border.all(width: 0.5, color: Colors.black),
-          borderRadius: BorderRadius.circular(27.00),
-        ),
-        child: FlatButton(
-            onPressed: () async {
-              final form = _formkey.currentState;
-              if (form.validate()) {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => MyHomePage()));
-              }
-            },
-            child: Text('Authenticate',
-                style: TextStyle(
-                  fontFamily: "Montserrat",
-                  fontWeight: FontWeight.w700,
-                  fontSize: 19,
-                  color: Color(0xffffffff),
-                ))));
-  }
-
-  void showSnackBar(BuildContext context, String status) {
-    final scaffold = Scaffold.of(context);
-    scaffold.showSnackBar(new SnackBar(
-        content: Text(status),
-        action: SnackBarAction(
-            label: 'Close', onPressed: scaffold.hideCurrentSnackBar)));
+  List<Widget> buildTabs(BuildContext context) {
+    return tabs
+        .map((e) => Center(
+                child: Text(
+              e,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            )))
+        .toList();
   }
 }
