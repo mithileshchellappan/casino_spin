@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "612892439244",
+    "project_id": "roll-d1d09",
+    "storage_bucket": "roll-d1d09.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:612892439244:android:c183a2208460dbba368869",
+        "android_client_info": {
+          "package_name": "com.example.casino_spin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "612892439244-qiq70m864l5imidge7m8jumeottpaeul.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.casino_spin",
+            "certificate_hash": "c0dd4da59bc951b704f8f6de7c5e6c2427037a78"
+          }
+        },
+        {
+          "client_id": "612892439244-v8fm0pt2eqvf43tst6jjs4nb8eis8jf3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiX1ealS3BeFDmbusdTO7m0DTjR5mVBIo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "612892439244-v8fm0pt2eqvf43tst6jjs4nb8eis8jf3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
