@@ -132,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen>
                             var request = http.MultipartRequest(
                                 'POST',
                                 Uri.parse(
-                                    'https://casino.pro-z.in/user/signup'));
+                                    'http://casino.pro-z.in/user/signup'));
                             request.fields.addAll({
                               'username': username,
                               'password': password,
@@ -148,17 +148,7 @@ class _LoginScreenState extends State<LoginScreen>
                             } else {
                               print(response.reasonPhrase);
                             }
-                            // final UserCredential user = await FirebaseAuth
-                            //     .instance
-                            //     .createUserWithEmailAndPassword(
-                            //         email: email.trim(), password: password);
-                            // await FirebaseFirestore.instance
-                            //     .collection("users")
-                            //     .doc(user.user.uid.toString())
-                            //     .set({
-                            //   "email": email,
-                            //   "username": username,
-                            // });
+                           
                             print("done");
                             _registerBtnController.success();
                             Navigator.push(

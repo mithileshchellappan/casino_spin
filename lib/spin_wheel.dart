@@ -64,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
               switch (stream.connectionState) {
                 case ConnectionState.waiting:
                   return Center(child: CircularProgressIndicator());
-
                 case ConnectionState.done:
                   return StreamBuilder(
                       stream: _timeController.stream,
@@ -213,8 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                                                           labels[
                                                                               snapshot.data];
                                                                     });
-                                                                    Navigator.pop(
-                                                                        context);
+                                                                    
                                                                     Alert(
                                                                         context:
                                                                             context,
